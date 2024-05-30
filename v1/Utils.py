@@ -354,9 +354,9 @@ def save_bijector_info(path_to_results: str,
 
 def define_dir(dir: str) -> str:
     try:
-        os.mkdir(dir)
-    except:
-        print('Directory',dir,'already exists.')
+        os.makedirs(dir, exist_ok=True)
+    except Exception as e:
+        print(f"An error occurred while creating directory '{dir}': {e}")
     return dir
 
 def backup_existing_dir(dir: str, 
