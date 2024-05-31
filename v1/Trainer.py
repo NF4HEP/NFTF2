@@ -713,7 +713,7 @@ class Trainer(Debugger):
         Debugger.__init__(self, debug_print_mode = debug_print_mode) # Initialize Debugger class
         # Print debug information if in debug mode
         if self.debug_print_mode:
-            print("\n--------------- Debub info ---------------")
+            print("\n--------------- Debug info ---------------")
             print("Initializing Trainer with following parameters:")
             print(f"base_distribution: {base_distribution}")
             print(f"flow: {flow}")
@@ -733,7 +733,7 @@ class Trainer(Debugger):
         
         # Print debug information if in debug mode
         if self.debug_print_mode:
-            print("\n--------------- Debub info ---------------")
+            print("\n--------------- Debug info ---------------")
             print("Defined attributes:")
             print(f"self.base_dist: {self.base_dist}")
             print(f"self.flow: {self.flow}")

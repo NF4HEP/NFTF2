@@ -511,9 +511,9 @@ def MAFNsplineClip(ndims,spline_knots,num_bijectors,range_min,n_hidden=[128,128,
 
 
 def ChooseBijector(bijector_name,ndims,spline_knots,nbijectors,range_min,hidden_layers,activation,regulariser,eps_regulariser,perm_style='bi-partition',shuffle='Noshuffle'):
-    if regulariser=='l1':
+    if regulariser=="l1":
         regulariser=tf.keras.regularizers.l1(eps_regulariser)
-    if regulariser=='l2':
+    elif regulariser=="l2":
         regulariser=tf.keras.regularizers.l2(eps_regulariser)
     else:
         regulariser=None
