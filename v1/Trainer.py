@@ -685,26 +685,6 @@ class TerminateOnNaNFractionCallback(tf.keras.callbacks.Callback):
         if nan_fraction > self.threshold:
             print(f"Terminate training: NaN fraction {nan_fraction} > {self.threshold}")
             self.model.stop_training = True # type: ignore
-            
-#class RegularizationLossMonitor(tf.keras.callbacks.Callback):
-#    def on_epoch_end(self, epoch, logs=None):
-#        if self.model.losses:
-#            reg_loss = tf.add_n(self.model.losses)
-#            print(f"After Epoch {epoch + 1}: Regularization Loss = {reg_loss.numpy()}")
-#        else:
-#            print(f"After Epoch {epoch + 1}: No Regularization Loss")
-#
-#class GradientInspectingCallback(tf.keras.callbacks.Callback):
-#    def __init__(self, model):
-#        self.model = model
-#
-#    def on_batch_end(self, batch, logs=None):
-#        with tf.GradientTape() as tape:
-#            predictions = self.model(self.model.inputs)
-#            loss = self.model.compiled_loss(self.model.targets[0], predictions, regularization_losses=self.model.losses)
-#        grads = tape.gradient(loss, self.model.trainable_variables)
-#        for var, grad in zip(self.model.trainable_variables, grads):
-#            print(f"Batch {batch}: Gradients for {var.name}: {grad.numpy()}")
 
 class Trainer(Debugger):
     def __init__(self, 
