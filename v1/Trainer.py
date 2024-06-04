@@ -1,16 +1,24 @@
-__all__ = ["Debugger",
-           "HuberMinusLogProbLoss",
-           "HuberMinusLogProbMetric",
-           "MinusLogProbLoss",
-           "MinusLogProbMetric",
-           "LogProbLayer",
-           "HandleNaNCallback",
-           "Trainer",
-           "ensure_tensor",
-           "chop_to_zero",
-           "chop_to_zero_array",
-           "cornerplotter"
-            ]
+# Putting all classes and functions in __all__ list
+__all__ = ['Debugger', 
+           'MinusLogProbLoss', 
+           'MinusLogProbMetric', 
+           'MinusLogProbVarLoss', 
+           'MinusLogProbVarMetric', 
+           'HuberMinusLogProbLoss', 
+           'HuberMinusLogProbMetric', 
+           'MinusLogProbPowerLoss', 
+           'MinusLogProbPowerMetric', 
+           'log_prob_wrapper', 
+           'HandleNaNCallback', 
+           'TerminateOnNaNFractionCallback', 
+           'Trainer',
+           'ensure_tensor',
+           'check_config_dict',
+           'update_file_paths',
+           'chop_to_zero',
+           'cornerplotter',
+           'train_plotter']
+
            
 import os
 import json
@@ -611,30 +619,12 @@ class MinusLogProbPowerMetric(tf.keras.metrics.Metric, Debugger):
         self.total.assign(0.) # type: ignore
         self.count.assign(0.) # type: ignore
 
-
-class LogProbLayer(tf.keras.layers.Layer):
-    """
-    Layer that returns the log_prob of a distribution
-    Used to add debug assertion to the distribution.log_prob() method
-    """
-    def __init__(self,
-                 distribution: tfp.distributions.Distribution,
-                 dtype: DTypesType = "float32",
-                 **kwargs):
-        super(LogProbLayer, self).__init__(dtype=dtype, **kwargs)
-        self._distribution: tfp.distributions.Distribution = distribution
-
-    @property
-    def distribution(self) -> tfp.distributions.Distribution:
-        return self._distribution
-
-    def call(self, 
-             inputs: tf.Tensor
-             ) -> tf.Tensor:
-        log_prob: tf.Tensor = self.distribution.log_prob(inputs)
-        #tf.debugging.assert_all_finite(log_prob, 'Log probability contains NaN or inf values.')
-        return log_prob
-
+def log_prob_wrapper(distribution, inputs):
+    log_prob = distribution.log_prob(inputs)
+    # Add any assertions or checks here
+    # Example: ensure log_prob does not contain NaN or inf values
+    tf.debugging.assert_all_finite(log_prob, 'Log probability contains NaN or inf values.')
+    return log_prob
 
 class HandleNaNCallback(tf.keras.callbacks.Callback):
     def __init__(self, checkpoint_path, random_seed_var, lr_reduction_factor=0.5, max_restarts=3):
@@ -675,7 +665,7 @@ class HandleNaNCallback(tf.keras.callbacks.Callback):
 
                 # Continue training
                 self.model.stop_training = False # type: ignore
-
+                
 
 # Custom callback to terminate training if too many NaNs
 class TerminateOnNaNFractionCallback(tf.keras.callbacks.Callback):
@@ -695,7 +685,26 @@ class TerminateOnNaNFractionCallback(tf.keras.callbacks.Callback):
         if nan_fraction > self.threshold:
             print(f"Terminate training: NaN fraction {nan_fraction} > {self.threshold}")
             self.model.stop_training = True # type: ignore
-
+            
+#class RegularizationLossMonitor(tf.keras.callbacks.Callback):
+#    def on_epoch_end(self, epoch, logs=None):
+#        if self.model.losses:
+#            reg_loss = tf.add_n(self.model.losses)
+#            print(f"After Epoch {epoch + 1}: Regularization Loss = {reg_loss.numpy()}")
+#        else:
+#            print(f"After Epoch {epoch + 1}: No Regularization Loss")
+#
+#class GradientInspectingCallback(tf.keras.callbacks.Callback):
+#    def __init__(self, model):
+#        self.model = model
+#
+#    def on_batch_end(self, batch, logs=None):
+#        with tf.GradientTape() as tape:
+#            predictions = self.model(self.model.inputs)
+#            loss = self.model.compiled_loss(self.model.targets[0], predictions, regularization_losses=self.model.losses)
+#        grads = tape.gradient(loss, self.model.trainable_variables)
+#        for var, grad in zip(self.model.trainable_variables, grads):
+#            print(f"Batch {batch}: Gradients for {var.name}: {grad.numpy()}")
 
 class Trainer(Debugger):
     def __init__(self, 
@@ -767,8 +776,9 @@ class Trainer(Debugger):
             print(f"self.ndims: {self.ndims}")
 
         input: tf.keras.layers.Input = tf.keras.layers.Input(shape=(self.ndims,), dtype=tf.float32) # type: ignore
-        self.log_prob = LogProbLayer(self.nf_dist)(input) # type: ignore
         #self.log_prob = self.nf_dist.log_prob(input) # type: ignore
+        self.log_prob = log_prob_wrapper(self.nf_dist, input)
+        #self.log_prob = LogProbLayer(self.nf_dist)(input) # type: ignore
         self.model = tf.keras.Model(input, self.log_prob)
         self.trainable_params = sum(var.numpy().size for var in self.model.trainable_weights)
         self.non_trainable_params = sum(var.numpy().size for var in self.model.non_trainable_weights)
@@ -1515,6 +1525,10 @@ class Trainer(Debugger):
                 callback = HandleNaNCallback(**class_kwargs)
             elif class_name.lower() == 'terminateonnanfractioncallback':
                 callback = TerminateOnNaNFractionCallback(**class_kwargs)
+            elif class_name.lower() == 'regularizationlossmonitor':
+                callback = RegularizationLossMonitor(**class_kwargs)
+            elif class_name.lower() == 'gradientinspectingcallback':
+                callback = GradientInspectingCallback(**class_kwargs)
             else:
                 class_obj = get_class_from_string(class_name)
                 if class_obj is not None:

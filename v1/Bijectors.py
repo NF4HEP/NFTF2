@@ -368,13 +368,12 @@ def CsplineN(ndims,rem_dims,spline_knots,n_bijectors,range_min,n_hidden=[128,128
 
 
     return bijector
-
+    
 
 def MAFspline(ndims,n_hidden,activation,spline_knots,range_min,hidden_degrees='equal',use_bias=True, kernel_initializer='glorot_uniform',
     bias_initializer='zeros', kernel_regularizer=None,
     bias_regularizer=None, kernel_constraint=None, bias_constraint=None):
 
-    
     ann=tfb.AutoregressiveNetwork(3*spline_knots-1,hidden_units=n_hidden,activation=activation,hidden_degrees=hidden_degrees, use_bias=use_bias, kernel_initializer=kernel_initializer,
     bias_initializer=bias_initializer, kernel_regularizer=kernel_regularizer,
     bias_regularizer=bias_regularizer, kernel_constraint=kernel_constraint, bias_constraint=bias_constraint)
