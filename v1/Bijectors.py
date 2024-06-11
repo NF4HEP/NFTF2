@@ -106,11 +106,6 @@ def ShuffleSecond(ndims,rem_dims):
     permutation=tf.cast(order,dtype=tf.int32)
     return permutation
 
-
-
-
-
-
 def MAF(ndims,hidden_units,activation, hidden_degrees='equal',
 use_bias=True, kernel_initializer='glorot_uniform',
     bias_initializer='zeros', kernel_regularizer=None,
@@ -123,8 +118,6 @@ use_bias=True, kernel_initializer='glorot_uniform',
     
     return tfb.MaskedAutoregressiveFlow(shift_and_log_scale_fn=made)
     
-
-
 def MAFN(ndims,num_bijectors,hidden_layers,activation,hidden_degrees='equal',use_bias=True, kernel_initializer='glorot_uniform',
     bias_initializer='zeros', kernel_regularizer=None,
     bias_regularizer=None, kernel_constraint=None, bias_constraint=None,perm_style='bi-partition',shuffle='Noshuffle'):
