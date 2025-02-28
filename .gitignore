@@ -4,4 +4,6 @@
 *.DS_Store*
 *.ipynb_checkpoints*
 *desktop.ini*
+*GMetrics*
 *__pycache__*
+*tutorial/outputs/*
